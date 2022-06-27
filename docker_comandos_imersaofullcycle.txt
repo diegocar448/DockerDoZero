@@ -1,0 +1,114 @@
+Comando docker WSL2 
+
+//Acessar container  (exemplo nginx)
+docker exec -it 2e8 /bin/sh
+
+//rodar nginx na porta 80 e acessar pelo navegador
+docker run -p 8000:80 nginx:1.19.10-alpine
+
+//acessar o arquivo que iniciou nginx dentro do container nginx
+cat docker-entrypoint.sh
+
+//criar um instacia do mysql no docker flag -e para definir senha mysql e 
+	-v para definir um volume pegar o diretorio atual $(pwd):/var/lib/mysql 
+	-p para setar a porta e ser usada em ferramentas externas como o phpmyadmin
+//setando tbm a porta para poder ser usado por um exemplo phpmyadmin
+docker run -p 3306:3306  -v $(pwd)/mysql:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=root  mysql:5.7
+
+
+//entrar no volume bash do mysql 
+docker exec -it a2cee /bin/bash
+
+//acessando mysql apos o comando de entrar no volume acima 
+mysql -uroot -proot
+
+//remover mysql
+sudo rm -rf mysql
+
+//criar nova imagem node
+docker build -t minha-imagem-node .
+docker build -t argentinaluiz/minha-imagem-node .  
+
+//
+docker push argentinaluiz/minha-imagem-node
+https://hub.docker.com/r/argentinaluiz/minha-imagem-node
+
+//ver a versao do node
+docker run minha-imagem-node node -v
+
+//usamos $(pwd) para compartilhar o que esta dentro do projeto com o node
+//apontando /home
+//setando para a porta 3000
+docker run -v $(pwd):/home/node/app -p 3000:3000 minha-imagem-node
+
+//geramos um package.json
+npm init -y
+
+//criamos o projeto express e geramos o node modules
+npm install express
+
+//fazendo build a partir de um arquivo de docker diferenciado por exemplo Dockerfile.prod
+docker build -t minha-imagem-node-prod -f Dockerfile.prod .
+
+//fazendo build a partir de um arquivo de docker diferenciado passando a versão do build setado manualmente
+docker build -t minha-imagem-node-prod:0.0.2 -f Dockerfile.prod
+
+//no explore para acessar o ubuntu wsl digital no path do explorer \\wsl$
+
+////////////////////////////////////////////////////////////////////////////////////
+/////////// Sequencia para ambiente node////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
+
+//Primeiro rodamos o container na porta 3000 
+docker run -v $(pwd):/home/node/app -p 3000:3000 minha-imagem-node
+
+//Depois em outro terminal entramos em nosso container
+docker exec -it idDoContainer /bin/bash
+
+//Agora entramos em /home/node/app
+cd /home/node/app
+
+//instalamos a extensão RestClient no VSCode para testarmos requisições http
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
+
+//INFORMAÇÕES ARQUIVO DOCKERFILE
+
+
+FROM node:14.17.0-slim
+
+--aqui dizemos que o usuario é node
+USER node
+
+--é uma instrução que qdo um container for criado isso aqui será executado
+-- tail é um comando para ler arquivos
+-- -f vai apontar para /dev/null que é um dispositivo 
+CMD [ "tail", "-f", "/dev/null" ]
+
+
+////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////////////////////////////
+/////////// Adicionamos o docker-compose.yaml///////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
+
+version: '3',
+
+service: 
+  app:
+    --o build indica que usaremos o manifesto Dockerfile
+    build: .
+    ports:
+     - 3000:3000
+    volumes:
+     - .:/home/node/app
+
+
+////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
